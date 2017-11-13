@@ -1,5 +1,8 @@
 package com.rottin.administrator.hellonews;
 
+import android.content.ClipData;
+import android.content.ClipDescription;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.nfc.Tag;
 import android.os.AsyncTask;
@@ -13,6 +16,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.github.library.bubbleview.BubbleTextView;
 
@@ -22,7 +27,9 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.sql.Time;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.zip.Inflater;
@@ -43,6 +50,9 @@ public class ChatActivity extends AppCompatActivity {
         init();
         chatAdapter = new ChatAdapter(this, chatArrayList);
         chatListView.setAdapter(chatAdapter);
+
+        sendNowTime();
+        sendGreeting();
         mAsyncTask asyncTask = new mAsyncTask();
         asyncTask.execute();
     }
@@ -54,14 +64,49 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     //发送一个聊天内容（在界面添加一个气泡
-    private void sendAChat(String content, int type) throws InterruptedException {
+    private void sendAChat(String content, int type) {
 
         // TODO: 2017/11/12 如果同时大量添加，气泡顺序混乱
 
         ChatData chatData = new ChatData(content, type);
         chatArrayList.add(chatData);
         chatAdapter.notifyDataSetChanged();
-        Thread.sleep(100);
+//        Thread.sleep(100);
+    }
+    private void sendNowTime(){
+        Calendar calendar = Calendar.getInstance();
+        String time = ""
+                + calendar.get(Calendar.YEAR)+"年"
+                + calendar.get(Calendar.MONTH)+"月"
+                +calendar.get(Calendar.DAY_OF_MONTH)+"日"
+                + "    "
+                + calendar.get(Calendar.HOUR_OF_DAY)+":";
+        if(calendar.get(Calendar.MINUTE)/10 == 0)
+            time  += "0"+calendar.get(Calendar.MINUTE);
+        else
+            time += calendar.get(Calendar.MINUTE);
+        Log.d(TAG, "NowTime:"+time);
+
+        ChatData chatData = new ChatData(time, 2);
+        chatArrayList.add(chatData);
+        chatAdapter.notifyDataSetChanged();
+    }
+    private void sendGreeting(){
+        Calendar calendar = Calendar.getInstance();
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        String greeting = "";
+        if(hour>=4 &&hour <10)
+            greeting = "早啊";
+        else if (hour>=10 &&hour <12)
+            greeting = "上午好";
+        else if (hour>=12 &&hour <18)
+            greeting = "下午好";
+        else if (hour>=18 &&hour <=24)
+            greeting = "晚上好";
+        else if (hour>=0&&hour<4)
+            greeting = "夜深了";
+
+        sendAChat(greeting,0);
     }
 
 
@@ -69,7 +114,7 @@ public class ChatActivity extends AppCompatActivity {
 
         Context context;
         ArrayList<ChatData> chatArrayList = null;
-        int[] bubbleLayout = {R.layout.bubble_arrow_to_left, R.layout.bubble_arrow_to_right};
+        int[] bubbleLayout = {R.layout.bubble_arrow_to_left, R.layout.bubble_arrow_to_right, R.layout.time_list_item};
         LayoutInflater inflater;
 
         public ChatAdapter(Context context, ArrayList<ChatData> chatArrayList) {
@@ -101,15 +146,40 @@ public class ChatActivity extends AppCompatActivity {
 //                int type = chatArrayList.get(position).getType();
 //                convertView = inflater.inflate(bubbleLayout[type], null);
 //            }
-            int type = chatArrayList.get(position).getType();
+            ChatData chatData = chatArrayList.get(position);
+            int type = chatData.getType();
             convertView = inflater.inflate(bubbleLayout[type], null);
+            if(type == 0|| type == 1){
+                final BubbleTextView bubbleTextView = (BubbleTextView) convertView.findViewById(R.id.bubble);
+                char[] contentToChar = chatData.getContent().toCharArray();
+                Log.d("Chat", chatData.getContent() + "");
+                bubbleTextView.setText(contentToChar, 0, contentToChar.length);
+                bubbleTextView.setOnLongClickListener(new View.OnLongClickListener() {
+                    @Override
+                    public boolean onLongClick(View v) {
+                        //长按复制内容
+                        ClipboardManager clipboardManager = (ClipboardManager)getSystemService(CLIPBOARD_SERVICE);
+                        ClipData.Item item = new ClipData.Item(bubbleTextView.getText());
+                        ClipDescription description = new ClipDescription(null,new String[]{ClipDescription.MIMETYPE_TEXT_PLAIN});
+                        ClipData clipData = new ClipData(description,item);
+                        clipboardManager.setPrimaryClip(clipData);
+                        Toast.makeText(ChatActivity.this, "已复制",Toast.LENGTH_SHORT).show();
+                        return true;
+                    }
+                });
+            }else if (type == 2){
+                TextView timeTextView = (TextView)convertView.findViewById(R.id.time_textview);
+                timeTextView.setText(chatData.getContent());
+            }
 
-            BubbleTextView bubbleTextView = (BubbleTextView) convertView.findViewById(R.id.bubble);
-            char[] contentToChar = chatArrayList.get(position).getContent().toCharArray();
-            Log.d("Chat", chatArrayList.get(position).getContent() + "");
-            bubbleTextView.setText(contentToChar, 0, contentToChar.length);
             return convertView;
         }
+
+        @Override
+        public boolean isEnabled(int position) {
+            return true;
+        }
+
     }
 
     private class mAsyncTask extends AsyncTask<String, Void, String>{
@@ -147,11 +217,7 @@ public class ChatActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String s) {
-            try {
-                sendAChat(s, 0);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            sendAChat(s, 0);
         }
     }
 }

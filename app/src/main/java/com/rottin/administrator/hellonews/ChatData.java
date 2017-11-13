@@ -2,6 +2,11 @@ package com.rottin.administrator.hellonews;
 
 /**
  * Created by Administrator on 2017/11/12.
+ * content：显示内容字符串
+ * type：
+ *      0：左侧气泡
+ *      1：右侧气泡
+ *      2：时间
  */
 
 public class ChatData {
