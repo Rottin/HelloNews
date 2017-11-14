@@ -4,6 +4,7 @@ import android.content.ClipData;
 import android.content.ClipDescription;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.nfc.Tag;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
@@ -15,6 +16,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -53,6 +57,10 @@ public class ChatActivity extends AppCompatActivity {
 
         sendNowTime();
         sendGreeting();
+
+//        for (int i=0;i<20;i++)
+//            sendGreeting();
+
         mAsyncTask asyncTask = new mAsyncTask();
         asyncTask.execute();
     }
@@ -61,8 +69,21 @@ public class ChatActivity extends AppCompatActivity {
     private void init() {
         chatListView = (ListView) findViewById(R.id.chat_list);
         chatArrayList = new ArrayList<ChatData>();
+
+        //判断是否初次使用
+        getUsername();
     }
 
+    private void getUsername(){
+        SharedPreferences preferences = getSharedPreferences("com.hellonews", Context.MODE_PRIVATE);
+        boolean isFirst = preferences.getBoolean("first", true);
+        String username = preferences.getString("username", null);
+        if(isFirst == true || username == null){
+            EditText editText = (EditText)findViewById(R.id.chat_edittext);
+            Button sendButton = (Button)findViewById(R.id.chat_send_button);
+            LinearLayout layout = (LinearLayout)findViewById(R.id.send_layout);
+        }
+    }
     //发送一个聊天内容（在界面添加一个气泡
     private void sendAChat(String content, int type) {
 

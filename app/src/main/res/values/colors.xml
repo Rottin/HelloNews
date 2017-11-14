@@ -3,4 +3,6 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
+    <color name="sendButtonUnpressed">#0bd38a</color>
+    <color name="sendButtonPressed">#0ebc7d</color>
 </resources>
