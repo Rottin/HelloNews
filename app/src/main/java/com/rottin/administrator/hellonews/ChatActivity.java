@@ -50,8 +50,7 @@ public class ChatActivity extends AppCompatActivity {
         init();
 
         sendNowTime();
-        sendGreeting();
-        getUsername();
+        checkFirst();
 
 //        for (int i=0;i<20;i++)
 //            sendGreeting();
@@ -68,7 +67,7 @@ public class ChatActivity extends AppCompatActivity {
         chatListView.setAdapter(chatAdapter);
     }
 
-    private void getUsername() {
+    private void checkFirst() {
         final SharedPreferences preferences = getSharedPreferences("com.hellonews", Context.MODE_PRIVATE);
         boolean isFirst = preferences.getBoolean("first", true);
         String username = preferences.getString("username", null);
@@ -102,11 +101,12 @@ public class ChatActivity extends AppCompatActivity {
                         if (imm.isActive())
                             imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
                     }
-
                 }
             });
         } else {
+            Log.d(TAG, "username:"+username);
             mUsername = username;
+            sendGreeting();
         }
     }
 
