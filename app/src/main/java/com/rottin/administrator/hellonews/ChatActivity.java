@@ -31,6 +31,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Random;
 
 public class ChatActivity extends AppCompatActivity {
 
@@ -40,6 +41,7 @@ public class ChatActivity extends AppCompatActivity {
     private ArrayList<ChatData> chatArrayList = null;
     private static final String HOST = "172.20.46.30";
     private static final int PORT = 5000;
+    private String mUsername = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,14 +68,14 @@ public class ChatActivity extends AppCompatActivity {
         chatListView.setAdapter(chatAdapter);
     }
 
-    private void getUsername(){
+    private void getUsername() {
         final SharedPreferences preferences = getSharedPreferences("com.hellonews", Context.MODE_PRIVATE);
         boolean isFirst = preferences.getBoolean("first", true);
         String username = preferences.getString("username", null);
-        if(isFirst == true || username == null){
-            final EditText editText = (EditText)findViewById(R.id.chat_edittext);
-            final Button sendButton = (Button)findViewById(R.id.chat_send_button);
-            final LinearLayout layout = (LinearLayout)findViewById(R.id.send_layout);
+        if (isFirst == true || username == null) {
+            final EditText editText = (EditText) findViewById(R.id.chat_edittext);
+            final Button sendButton = (Button) findViewById(R.id.chat_send_button);
+            final LinearLayout layout = (LinearLayout) findViewById(R.id.send_layout);
 
             sendAChat("初次见面，你叫什么名字？", 0);
             layout.setVisibility(View.VISIBLE);
@@ -84,26 +86,30 @@ public class ChatActivity extends AppCompatActivity {
                     // TODO: 2017/11/14 用户名规范性检查
                     String username = editText.getText().toString().trim();
                     editText.setText("");
-                    if(username.equals("") || username == null)
+                    if (username.equals("") || username == null)
                         sendAChat("输入不能为空，也不能是空白符号", 0);
                     else {
+                        mUsername = username;
                         sendAChat(username, 1);
-                        sendAChat(username+"，你好", 0);
+                        sendAChat(username + "，你好", 0);
                         sendAChat("很高兴认识你", 0);
                         preferences.edit().putBoolean("first", false).commit();
                         preferences.edit().putString("username", username).commit();
                         //设为不可见
                         layout.setVisibility(View.GONE);
                         //关闭输入法
-                        InputMethodManager imm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
-                        if(imm.isActive())
+                        InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                        if (imm.isActive())
                             imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
                     }
 
                 }
             });
+        } else {
+            mUsername = username;
         }
     }
+
     //发送一个聊天内容（在界面添加一个气泡
     private void sendAChat(String content, int type) {
 
@@ -114,40 +120,46 @@ public class ChatActivity extends AppCompatActivity {
         chatAdapter.notifyDataSetChanged();
 //        Thread.sleep(100);
     }
-    private void sendNowTime(){
+
+    private void sendNowTime() {
         Calendar calendar = Calendar.getInstance();
         String time = ""
-                + calendar.get(Calendar.YEAR)+"年"
-                + calendar.get(Calendar.MONTH)+"月"
-                +calendar.get(Calendar.DAY_OF_MONTH)+"日"
+                + calendar.get(Calendar.YEAR) + "年"
+                + calendar.get(Calendar.MONTH) + "月"
+                + calendar.get(Calendar.DAY_OF_MONTH) + "日"
                 + "    "
-                + calendar.get(Calendar.HOUR_OF_DAY)+":";
-        if(calendar.get(Calendar.MINUTE)/10 == 0)
-            time  += "0"+calendar.get(Calendar.MINUTE);
+                + calendar.get(Calendar.HOUR_OF_DAY) + ":";
+        if (calendar.get(Calendar.MINUTE) / 10 == 0)
+            time += "0" + calendar.get(Calendar.MINUTE);
         else
             time += calendar.get(Calendar.MINUTE);
-        Log.d(TAG, "NowTime:"+time);
+        Log.d(TAG, "NowTime:" + time);
 
         ChatData chatData = new ChatData(time, 2);
         chatArrayList.add(chatData);
         chatAdapter.notifyDataSetChanged();
     }
-    private void sendGreeting(){
+
+    private void sendGreeting() {
         Calendar calendar = Calendar.getInstance();
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
         String greeting = "";
-        if(hour>=4 &&hour <10)
+        if (hour >= 4 && hour < 10)
             greeting = "早啊";
-        else if (hour>=10 &&hour <12)
+        else if (hour >= 10 && hour < 12)
             greeting = "上午好";
-        else if (hour>=12 &&hour <18)
+        else if (hour >= 12 && hour < 18)
             greeting = "下午好";
-        else if (hour>=18 &&hour <=24)
+        else if (hour >= 18 && hour <= 24)
             greeting = "晚上好";
-        else if (hour>=0&&hour<4)
+        else if (hour >= 0 && hour < 4)
             greeting = "夜深了";
 
-        sendAChat(greeting,0);
+        Random random = new Random();
+        if (random.nextInt(100) > 50)
+            sendAChat(greeting + "，" + mUsername, 0);
+        else
+            sendAChat(mUsername + "，" + greeting, 0);
     }
 
 
@@ -190,7 +202,7 @@ public class ChatActivity extends AppCompatActivity {
             ChatData chatData = chatArrayList.get(position);
             int type = chatData.getType();
             convertView = inflater.inflate(bubbleLayout[type], null);
-            if(type == 0|| type == 1){
+            if (type == 0 || type == 1) {
                 final BubbleTextView bubbleTextView = (BubbleTextView) convertView.findViewById(R.id.bubble);
                 char[] contentToChar = chatData.getContent().toCharArray();
                 Log.d("Chat", chatData.getContent() + "");
@@ -199,17 +211,17 @@ public class ChatActivity extends AppCompatActivity {
                     @Override
                     public boolean onLongClick(View v) {
                         //长按复制内容
-                        ClipboardManager clipboardManager = (ClipboardManager)getSystemService(CLIPBOARD_SERVICE);
+                        ClipboardManager clipboardManager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
                         ClipData.Item item = new ClipData.Item(bubbleTextView.getText());
-                        ClipDescription description = new ClipDescription(null,new String[]{ClipDescription.MIMETYPE_TEXT_PLAIN});
-                        ClipData clipData = new ClipData(description,item);
+                        ClipDescription description = new ClipDescription(null, new String[]{ClipDescription.MIMETYPE_TEXT_PLAIN});
+                        ClipData clipData = new ClipData(description, item);
                         clipboardManager.setPrimaryClip(clipData);
-                        Toast.makeText(ChatActivity.this, "已复制",Toast.LENGTH_SHORT).show();
+                        Toast.makeText(ChatActivity.this, "已复制", Toast.LENGTH_SHORT).show();
                         return true;
                     }
                 });
-            }else if (type == 2){
-                TextView timeTextView = (TextView)convertView.findViewById(R.id.time_textview);
+            } else if (type == 2) {
+                TextView timeTextView = (TextView) convertView.findViewById(R.id.time_textview);
                 timeTextView.setText(chatData.getContent());
             }
 
@@ -223,7 +235,7 @@ public class ChatActivity extends AppCompatActivity {
 
     }
 
-    private class mAsyncTask extends AsyncTask<String, Void, String>{
+    private class mAsyncTask extends AsyncTask<String, Void, String> {
 
         @Override
         protected String doInBackground(String... params) {
@@ -237,8 +249,8 @@ public class ChatActivity extends AppCompatActivity {
                 in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
                 String line;
                 while ((line = in.readLine()) != null) {
-                    content += line+"\n";
-                    Log.d(TAG,"line:"+line);
+                    content += line + "\n";
+                    Log.d(TAG, "line:" + line);
                 }
 
             } catch (MalformedURLException e) {
@@ -247,9 +259,9 @@ public class ChatActivity extends AppCompatActivity {
                 e.printStackTrace();
             } finally {
                 try {
-                    if(in != null)
+                    if (in != null)
                         in.close();
-                }catch (IOException e){
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
