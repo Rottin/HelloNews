@@ -5,16 +5,14 @@ import android.content.ClipDescription;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.nfc.Tag;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.telephony.CellIdentityGsm;
-import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -31,12 +29,8 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Objects;
-import java.util.zip.Inflater;
 
 public class ChatActivity extends AppCompatActivity {
 
@@ -82,6 +76,7 @@ public class ChatActivity extends AppCompatActivity {
             final LinearLayout layout = (LinearLayout)findViewById(R.id.send_layout);
 
             sendAChat("初次见面，你叫什么名字？", 0);
+            layout.setVisibility(View.VISIBLE);
 
             sendButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -97,8 +92,12 @@ public class ChatActivity extends AppCompatActivity {
                         sendAChat("很高兴认识你", 0);
                         preferences.edit().putBoolean("first", false).commit();
                         preferences.edit().putString("username", username).commit();
+                        //设为不可见
                         layout.setVisibility(View.GONE);
-
+                        //关闭输入法
+                        InputMethodManager imm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
+                        if(imm.isActive())
+                            imm.hideSoftInputFromWindow(editText.getWindowToken(), 0);
                     }
 
                 }
