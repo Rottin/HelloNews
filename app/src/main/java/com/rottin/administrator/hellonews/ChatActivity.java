@@ -52,11 +52,10 @@ public class ChatActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
         init();
-        chatAdapter = new ChatAdapter(this, chatArrayList);
-        chatListView.setAdapter(chatAdapter);
 
         sendNowTime();
         sendGreeting();
+        getUsername();
 
 //        for (int i=0;i<20;i++)
 //            sendGreeting();
@@ -69,19 +68,40 @@ public class ChatActivity extends AppCompatActivity {
     private void init() {
         chatListView = (ListView) findViewById(R.id.chat_list);
         chatArrayList = new ArrayList<ChatData>();
-
-        //判断是否初次使用
-        getUsername();
+        chatAdapter = new ChatAdapter(this, chatArrayList);
+        chatListView.setAdapter(chatAdapter);
     }
 
     private void getUsername(){
-        SharedPreferences preferences = getSharedPreferences("com.hellonews", Context.MODE_PRIVATE);
+        final SharedPreferences preferences = getSharedPreferences("com.hellonews", Context.MODE_PRIVATE);
         boolean isFirst = preferences.getBoolean("first", true);
         String username = preferences.getString("username", null);
         if(isFirst == true || username == null){
-            EditText editText = (EditText)findViewById(R.id.chat_edittext);
-            Button sendButton = (Button)findViewById(R.id.chat_send_button);
+            final EditText editText = (EditText)findViewById(R.id.chat_edittext);
+            final Button sendButton = (Button)findViewById(R.id.chat_send_button);
             LinearLayout layout = (LinearLayout)findViewById(R.id.send_layout);
+
+            sendAChat("初次见面，你叫什么名字？", 0);
+
+            sendButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // TODO: 2017/11/14 用户名规范性检查
+                    String username = editText.getText().toString().trim();
+                    editText.setText("");
+                    if(username.equals("") || username == null)
+                        sendAChat("输入不能为空，也不能是空白符号", 0);
+                    else {
+                        sendAChat(username, 1);
+                        sendAChat(username+"，你好", 0);
+                        sendAChat("很高兴认识你", 0);
+                        preferences.edit().putBoolean("first", false).commit();
+                        preferences.edit().putString("username", username).commit();
+
+                    }
+
+                }
+            });
         }
     }
     //发送一个聊天内容（在界面添加一个气泡
