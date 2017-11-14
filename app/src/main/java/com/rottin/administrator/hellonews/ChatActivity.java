@@ -79,7 +79,7 @@ public class ChatActivity extends AppCompatActivity {
         if(isFirst == true || username == null){
             final EditText editText = (EditText)findViewById(R.id.chat_edittext);
             final Button sendButton = (Button)findViewById(R.id.chat_send_button);
-            LinearLayout layout = (LinearLayout)findViewById(R.id.send_layout);
+            final LinearLayout layout = (LinearLayout)findViewById(R.id.send_layout);
 
             sendAChat("初次见面，你叫什么名字？", 0);
 
@@ -97,6 +97,7 @@ public class ChatActivity extends AppCompatActivity {
                         sendAChat("很高兴认识你", 0);
                         preferences.edit().putBoolean("first", false).commit();
                         preferences.edit().putString("username", username).commit();
+                        layout.setVisibility(View.GONE);
 
                     }
 
