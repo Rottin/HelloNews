@@ -155,11 +155,15 @@ public class ChatActivity extends AppCompatActivity {
         else if (hour >= 0 && hour < 4)
             greeting = "夜深了";
 
-        Random random = new Random();
-        if (random.nextInt(100) > 50)
-            sendAChat(greeting + "，" + mUsername, 0);
-        else
-            sendAChat(mUsername + "，" + greeting, 0);
+        if(mUsername.equals("")){
+            sendAChat(greeting, 0);
+        }else {
+            Random random = new Random();
+            if (random.nextInt(100) > 50)
+                sendAChat(greeting + "，" + mUsername, 0);
+            else
+                sendAChat(mUsername + "，" + greeting, 0);
+        }
     }
 
 
